@@ -1,0 +1,33 @@
+### 
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "name" : "John Cena",
+    "number": "123-456"
+}
+
+### 
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "name" : "John Cena"
+}
+
+### 
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "number": "123-456"
+}
+
+
+### 
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+
+}
