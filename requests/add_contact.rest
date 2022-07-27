@@ -12,6 +12,15 @@ POST http://localhost:3001/api/persons
 Content-Type: application/json
 
 {
+    "name" : "J",
+    "number": "123-456"
+}
+
+### 
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
     "name" : "John Cena"
 }
 
@@ -30,4 +39,50 @@ Content-Type: application/json
 
 {
 
+}
+
+
+### 
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "name" : "test number 1",
+    "number": "09-1234556"
+}
+
+### 
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "name" : "test number 2",
+    "number": "040-22334455"
+}
+
+### 
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "name" : "test number 3",
+    "number": "1234556"
+}
+
+### 
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "name" : "test number 3",
+    "number": "1-22334455"
+}
+
+### 
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "name" : "test number 3",
+    "number": "10-22-334455"
 }

@@ -11,9 +11,11 @@ morgan.token('reqbody', req => { return JSON.stringify(req.body) });
 app.use(morgan(':method :url :status - :response-time ms :reqbody'));
 //app.use(morgan('tiny'));
 
-let persons = require('./data/persons');
+//let persons = require('./data/persons');
 const Person = require('./models/person');
 
+/* 
+//not in use since 
 const radomNumber = () => Math.round(Math.random() * 100000)
 
 const generateId = () => {
@@ -25,10 +27,13 @@ const generateId = () => {
     }while(idsInUse.includes(id))
 
     return id
-}
+} 
+*/
 
 const nameAlreadyInUse = (name) =>{
-    return persons.find(p => p.name.toLocaleLowerCase().includes(name.toLocaleLowerCase()));
+    return Person.find({}).then(
+        persons => persons.find(p => p.name.toLocaleLowerCase() === name.toLocaleLowerCase())
+    )
 }
 
 
@@ -37,32 +42,44 @@ app.get('/', (request, response) => {
 })
 
 app.get('/info', (request, response) => {
-    response.send(`
-        <div>
-            <p>Phonebook has info for ${persons.length} people</p>
-            <p>${new Date()}</p>
-        </div>
-    `);
+
+    Person.find({}).then(r => {
+        response.send(`
+            <div>
+                <p>Phonebook has info for ${r.length} people</p>
+                <p>${new Date()}</p>
+            </div>
+        `);
+    });
+
 })
 
 
 app.get('/api/persons', (request, response) => {
-    response.json(persons)
+
+    Person.find({}).then(persons =>{
+        response.json(persons)
+    })
 })
 
-app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id);
-    const person = persons.find(person => person.id === id);
-    if (person) {
-        response.json(person)
-      } else {
-        response.status(404).end()
-      }
+app.get('/api/persons/:id', (request, response,next) => {
+
+    //const id = Number(request.params.id);
+
+    Person.findById(request.params.id)
+        .then(person => {
+            if(person){
+                response.json(person)
+            }else{
+                response.status(404).end()
+            }
+        }).catch(error => next(error))
+
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response,next) => {
 
-    const { name, number}= request.body;
+    const { name, number }= request.body;
 
     if (!name || !number) {
 
@@ -73,27 +90,75 @@ app.post('/api/persons', (request, response) => {
         return response.status(400).json({ error : missName + and + missNumber });
     }
 
-    if(nameAlreadyInUse(name)){
-        return response.status(400).json({ error : `Names must be unique. '${name}' is already in use.` });
-    }
-  
-    const person = {
-      name,
-      number,
-      id: generateId(),
-    }
-  
-    persons = persons.concat(person)
-  
-    response.json(person)
+    nameAlreadyInUse(name).then( nameInUse =>{
+
+        if(nameInUse){
+            return response.status(400).json({ error : `Names must be unique. '${name}' is already in use.` });
+        }else{
+            const person = new Person({
+              name,
+              number
+            });
+            
+            person.save().then(savedPerson  => { response.json(savedPerson) }).catch( e => { next(e) })
+        }
+    }).catch( e => {
+        console.log("Está a apanhar o erro direito!!!");
+        next(e);
+    })
+
 })
 
-app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    persons = persons.filter(person => person.id !== id)
+
+app.put('/api/persons/:id', (request, response, next) => {
+
+    const {name,number} = request.body
+    const person = {  name,number }
   
-    response.status(204).end()
+    Person.findByIdAndUpdate(
+        request.params.id, 
+        person, 
+        { new: true, runValidators: true, context: 'query' }
+      )
+      .then(updatedPerson => {
+        response.json(updatedPerson)
+      })
+      .catch(error => next(error))
+});
+
+app.delete('/api/persons/:id', (request, response,next) => {
+
+    Person.findByIdAndRemove(request.params.id)
+        .then( r => {
+            //console.log("Respnseo delete",r);
+            response.status(204).end()
+        })
+        .catch(error => next(error))
+
 })
+
+
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'unknown endpoint' })
+  }
+  
+app.use(unknownEndpoint)
+
+
+const errorHandler = (error, request, response, next) => {
+    //console.error(error.message)
+  
+    if (error.name === 'CastError') {
+      return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
+    }
+  
+    next(error)
+  }
+  
+  // this has to be the last loaded middleware.
+  app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001;
 
