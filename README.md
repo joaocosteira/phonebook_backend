@@ -7,3 +7,6 @@ Additionally, this is part of a fullstack course, where the entire course materi
 
 ## Api
 This Api is available [here](https://thawing-springs-50406.herokuapp.com/api/persons).
+
+## FrontEnd
+The integration between the frontend and the backend can be accessed [here](https://thawing-springs-50406.herokuapp.com/).
