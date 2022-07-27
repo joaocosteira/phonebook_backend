@@ -1,18 +1,18 @@
-require('dotenv').config();
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const morgan = require('morgan')
-const cors = require('cors');
-app.use(cors());
-app.use(express.json());
-app.use(express.static('build'));
+const cors = require('cors')
+app.use(cors())
+app.use(express.json())
+app.use(express.static('build'))
 
-morgan.token('reqbody', req => { return JSON.stringify(req.body) });
-app.use(morgan(':method :url :status - :response-time ms :reqbody'));
-//app.use(morgan('tiny'));
+morgan.token('reqbody', req => { return JSON.stringify(req.body) })
+app.use(morgan(':method :url :status - :response-time ms :reqbody'))
+//app.use(morgan('tiny'))
 
-//let persons = require('./data/persons');
-const Person = require('./models/person');
+//let persons = require('./data/persons')
+const Person = require('./models/person')
 
 /* 
 //not in use since 
@@ -20,10 +20,10 @@ const radomNumber = () => Math.round(Math.random() * 100000)
 
 const generateId = () => {
 
-    const idsInUse = persons.map(p => p.id);
-    var id; 
+    const idsInUse = persons.map(p => p.id)
+    var id 
     do{
-        id = radomNumber();
+        id = radomNumber()
     }while(idsInUse.includes(id))
 
     return id
@@ -31,137 +31,137 @@ const generateId = () => {
 */
 
 const nameAlreadyInUse = (name) =>{
-    return Person.find({}).then(
-        persons => persons.find(p => p.name.toLocaleLowerCase() === name.toLocaleLowerCase())
-    )
+  return Person.find({}).then(
+    persons => persons.find(p => p.name.toLocaleLowerCase() === name.toLocaleLowerCase())
+  )
 }
 
 
 app.get('/', (request, response) => {
-    response.send('<h1>Hello to the Phonebook App!</h1>')
+  response.send('<h1>Hello to the Phonebook App!</h1>')
 })
 
 app.get('/info', (request, response) => {
 
-    Person.find({}).then(r => {
-        response.send(`
+  Person.find({}).then(r => {
+    response.send(`
             <div>
                 <p>Phonebook has info for ${r.length} people</p>
                 <p>${new Date()}</p>
             </div>
-        `);
-    });
+        `)
+  })
 
 })
 
 
 app.get('/api/persons', (request, response) => {
 
-    Person.find({}).then(persons =>{
-        response.json(persons)
-    })
+  Person.find({}).then(persons =>{
+    response.json(persons)
+  })
 })
 
 app.get('/api/persons/:id', (request, response,next) => {
 
-    //const id = Number(request.params.id);
+  //const id = Number(request.params.id)
 
-    Person.findById(request.params.id)
-        .then(person => {
-            if(person){
-                response.json(person)
-            }else{
-                response.status(404).end()
-            }
-        }).catch(error => next(error))
+  Person.findById(request.params.id)
+    .then(person => {
+      if(person){
+        response.json(person)
+      }else{
+        response.status(404).end()
+      }
+    }).catch(error => next(error))
 
 })
 
 app.post('/api/persons', (request, response,next) => {
 
-    const { name, number }= request.body;
+  const { name, number }= request.body
 
-    if (!name || !number) {
+  if (!name || !number) {
 
-        const missName = !name ? "Name is Missing" : '';
-        const missNumber = !number ? "Number is Missing" : '';
-        const and = !name && !number ? ' and ' : '';
+    const missName = !name ? 'Name is Missing' : ''
+    const missNumber = !number ? 'Number is Missing' : ''
+    const and = !name && !number ? ' and ' : ''
 
-        return response.status(400).json({ error : missName + and + missNumber });
-    }
+    return response.status(400).json({ error : missName + and + missNumber })
+  }
 
-    nameAlreadyInUse(name).then( nameInUse =>{
+  nameAlreadyInUse(name).then( nameInUse =>{
 
-        if(nameInUse){
-            return response.status(400).json({ error : `Names must be unique. '${name}' is already in use.` });
-        }else{
-            const person = new Person({
-              name,
-              number
-            });
+    if(nameInUse){
+      return response.status(400).json({ error : `Names must be unique. '${name}' is already in use.` })
+    }else{
+      const person = new Person({
+        name,
+        number
+      })
             
-            person.save().then(savedPerson  => { response.json(savedPerson) }).catch( e => { next(e) })
-        }
-    }).catch( e => {
-        console.log("Está a apanhar o erro direito!!!");
-        next(e);
-    })
+      person.save().then(savedPerson  => { response.json(savedPerson) }).catch( e => { next(e) })
+    }
+  }).catch( e => {
+    console.log('Está a apanhar o erro direito!!!')
+    next(e)
+  })
 
 })
 
 
 app.put('/api/persons/:id', (request, response, next) => {
 
-    const {name,number} = request.body
-    const person = {  name,number }
+  const {name,number} = request.body
+  const person = {  name,number }
   
-    Person.findByIdAndUpdate(
-        request.params.id, 
-        person, 
-        { new: true, runValidators: true, context: 'query' }
-      )
-      .then(updatedPerson => {
-        response.json(updatedPerson)
-      })
-      .catch(error => next(error))
-});
+  Person.findByIdAndUpdate(
+    request.params.id, 
+    person, 
+    { new: true, runValidators: true, context: 'query' }
+  )
+    .then(updatedPerson => {
+      response.json(updatedPerson)
+    })
+    .catch(error => next(error))
+})
 
 app.delete('/api/persons/:id', (request, response,next) => {
 
-    Person.findByIdAndRemove(request.params.id)
-        .then( r => {
-            //console.log("Respnseo delete",r);
-            response.status(204).end()
-        })
-        .catch(error => next(error))
+  Person.findByIdAndRemove(request.params.id)
+    .then( () => {
+      //console.log('Respnseo delete',r)
+      response.status(204).end()
+    })
+    .catch(error => next(error))
 
 })
 
 
 const unknownEndpoint = (request, response) => {
-    response.status(404).send({ error: 'unknown endpoint' })
-  }
+  response.status(404).send({ error: 'unknown endpoint' })
+}
   
 app.use(unknownEndpoint)
 
 
 const errorHandler = (error, request, response, next) => {
-    //console.error(error.message)
+  //console.error(error.message)
   
-    if (error.name === 'CastError') {
-      return response.status(400).send({ error: 'malformatted id' })
-    } else if (error.name === 'ValidationError') {
-        return response.status(400).json({ error: error.message })
-    }
-  
-    next(error)
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
   }
   
-  // this has to be the last loaded middleware.
-  app.use(errorHandler)
+  next(error)
+}
+  
+// this has to be the last loaded middleware.
+app.use(errorHandler)
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3001
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
+  console.log(`Server running on port ${PORT}`)
 })
