@@ -12,6 +12,7 @@ app.use(morgan(':method :url :status - :response-time ms :reqbody'));
 //app.use(morgan('tiny'));
 
 let persons = require('./data/persons');
+const Person = require('./models/person');
 
 const radomNumber = () => Math.round(Math.random() * 100000)
 
